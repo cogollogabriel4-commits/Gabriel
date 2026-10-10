@@ -53,7 +53,7 @@ En un VPS con Docker y un dominio que apunte a él:
 
 ```sh
 git clone <este repositorio> expedientes && cd expedientes
-echo "DOMINIO=expedientes.tuoficina.co" > .env
+cp .env.example .env   # y escribe tu dominio en DOMINIO
 mkdir -p respaldos && sudo chown 1000:1000 respaldos
 docker compose up -d --build
 docker compose exec app npm run crear-admin -- tu@correo.co "Tu Nombre"
