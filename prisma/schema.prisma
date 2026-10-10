@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  ADMIN
+  ABOGADO
+  ASISTENTE
+}
+
+enum EstadoCaso {
+  ACTIVO
+  SUSPENDIDO
+  TERMINADO
+  ARCHIVADO
+}
+
+enum TipoEvento {
+  AUDIENCIA
+  VENCIMIENTO
+  DILIGENCIA
+  CITA
+  OTRO
+}
+
+model Usuario {
+  id              String       @id @default(cuid())
+  nombre          String
+  correo          String       @unique
+  hashClave       String
+  rol             Rol          @default(ABOGADO)
+  activo          Boolean      @default(true)
+  intentosFallidos Int         @default(0)
+  bloqueadoHasta  DateTime?
+  creado          DateTime     @default(now())
+  asignaciones    Asignacion[]
+  documentos      Documento[]
+  actuaciones     Actuacion[]
+  auditoria       Auditoria[]
+}
+
+model Caso {
+  id           String       @id @default(cuid())
+  radicado     String
+  cliente      String
+  contraparte  String       @default("")
+  despacho     String       @default("")
+  area         String       @default("Civil")
+  clase        String       @default("")
+  rolCliente   String       @default("demandante")
+  estado       EstadoCaso   @default(ACTIVO)
+  inicio       DateTime?    @db.Date
+  notas        String       @default("")
+  creado       DateTime     @default(now())
+  actualizado  DateTime     @updatedAt
+  asignaciones Asignacion[]
+  documentos   Documento[]
+  actuaciones  Actuacion[]
+  eventos      Evento[]
+
+  @@index([radicado])
+  @@index([cliente])
+}
+
+model Asignacion {
+  casoId    String
+  usuarioId String
+  caso      Caso    @relation(fields: [casoId], references: [id], onDelete: Cascade)
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([casoId, usuarioId])
+}
+
+model Documento {
+  id          String    @id @default(cuid())
+  casoId      String
+  caso        Caso      @relation(fields: [casoId], references: [id], onDelete: Restrict)
+  nombre      String
+  categoria   String    @default("Otro")
+  nota        String    @default("")
+  contentType String
+  tamano      Int
+  ruta        String    @unique
+  sha256      String
+  subidoPorId String
+  subidoPor   Usuario   @relation(fields: [subidoPorId], references: [id])
+  subido      DateTime  @default(now())
+  borrado     DateTime?
+
+  @@index([casoId])
+}
+
+model Actuacion {
+  id       String   @id @default(cuid())
+  casoId   String
+  caso     Caso     @relation(fields: [casoId], references: [id], onDelete: Cascade)
+  fecha    DateTime @db.Date
+  texto    String
+  autorId  String
+  autor    Usuario  @relation(fields: [autorId], references: [id])
+  creado   DateTime @default(now())
+
+  @@index([casoId])
+}
+
+model Evento {
+  id      String     @id @default(cuid())
+  casoId  String?
+  caso    Caso?      @relation(fields: [casoId], references: [id], onDelete: Cascade)
+  titulo  String
+  tipo    TipoEvento @default(AUDIENCIA)
+  fecha   DateTime   @db.Date
+  hora    String     @default("")
+  lugar   String     @default("")
+  nota    String     @default("")
+  hecho   Boolean    @default(false)
+  creado  DateTime   @default(now())
+
+  @@index([fecha])
+}
+
+model Auditoria {
+  id        String   @id @default(cuid())
+  usuarioId String?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id])
+  accion    String
+  entidad   String
+  entidadId String   @default("")
+  detalle   String   @default("")
+  ip        String   @default("")
+  fecha     DateTime @default(now())
+
+  @@index([fecha])
+}
