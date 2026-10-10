@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Expedientes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="login" id="login" hidden>
+  <form class="card login-card" id="login-form" novalidate>
+    <div class="brand-l"><b>Expedientes</b><span>Gestión jurídica</span></div>
+    <label class="f" for="l-email">Correo<input type="email" id="l-email" autocomplete="username" required></label>
+    <label class="f" for="l-pass">Contraseña<input type="password" id="l-pass" autocomplete="current-password" required></label>
+    <button type="submit" class="primary">Entrar</button>
+    <p class="msg" id="l-msg" role="status"></p>
+  </form>
+</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2h8.5A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/></symbol>
+</svg>
+
+<div class="app" id="app" hidden>
+  <aside class="side">
+    <div class="brand"><b>Expedientes</b><span>Gestión jurídica</span></div>
+    <nav class="nav" aria-label="Secciones">
+      <button type="button" data-view="panel"><svg><use href="#i-panel"/></svg><span class="lbl">Panel</span></button>
+      <button type="button" data-view="casos"><svg><use href="#i-folder"/></svg><span class="lbl">Expedientes</span></button>
+      <button type="button" data-view="calendario"><svg><use href="#i-cal"/></svg><span class="lbl">Calendario</span></button>
+      <button type="button" data-view="documentos"><svg><use href="#i-doc"/></svg><span class="lbl">Documentos</span></button>
+      <button type="button" data-view="terminos"><svg><use href="#i-scale"/></svg><span class="lbl">Términos</span></button>
+      <button type="button" data-view="admin" class="admin-only"><svg><use href="#i-users"/></svg><span class="lbl">Administración</span></button>
+    </nav>
+    <div class="side-user">
+      <b id="me-nombre"></b><span id="me-rol"></span>
+      <div class="row"><button type="button" class="link" id="me-clave">Contraseña</button><button type="button" class="link" id="me-salir">Salir</button></div>
+    </div>
+  </aside>
+
+  <main id="main">
+    <!-- PANEL -->
+    <section class="view" id="v-panel">
+      <div class="vhead">
+        <div><p class="eyebrow" id="today-label"></p><h1>Panel de control</h1></div>
+        <div class="row">
+          <button type="button" class="ghost" data-act="new-event">Agendar</button>
+          <button type="button" class="primary lawyer-only" data-act="new-case">Nuevo expediente</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="s-activos">–</b><span>Expedientes activos</span></div>
+        <div class="stat"><b id="s-aud">–</b><span>Audiencias en 7 días</span></div>
+        <div class="stat" id="s-venc-box"><b id="s-venc">–</b><span>Vencimientos en 7 días</span></div>
+        <div class="stat"><b id="s-docs">–</b><span>Documentos archivados</span></div>
+      </div>
+      <div class="two">
+        <div class="card">
+          <div class="card-h"><h2>Próximos 30 días</h2><button type="button" class="link" data-go="calendario">Ver calendario</button></div>
+          <div id="p-agenda"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Expedientes recientes</h2><button type="button" class="link" data-go="casos">Ver todos</button></div>
+          <div id="p-casos"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CASOS -->
+    <section class="view" id="v-casos" hidden>
+      <div class="vhead">
+        <div><p class="eyebrow">Archivo</p><h1>Expedientes</h1></div>
+        <button type="button" class="primary lawyer-only" data-act="new-case">Nuevo expediente</button>
+      </div>
+      <div class="row">
+        <input type="search" id="c-q" placeholder="Buscar por radicado, cliente, contraparte o despacho" aria-label="Buscar expedientes" style="flex:1 1 260px;width:auto">
+        <select id="c-estado" aria-label="Filtrar por estado" style="width:auto">
+          <option value="">Todos los estados</option>
+          <option value="activo">Activos</option><option value="suspendido">Suspendidos</option>
+          <option value="terminado">Terminados</option><option value="archivado">Archivados</option>
+        </select>
+        <select id="c-area" aria-label="Filtrar por área" style="width:auto"></select>
+      </div>
+      <div class="card"><div class="tablewrap" id="c-list"></div></div>
+    </section>
+
+    <!-- CASO DETALLE -->
+    <section class="view" id="v-caso" hidden>
+      <div><button type="button" class="link" data-go="casos">← Expedientes</button></div>
+      <div class="card case-head" id="k-head"></div>
+      <div class="tabs" role="tablist" id="k-tabs">
+        <button type="button" role="tab" data-tab="docs" aria-selected="true">Documentos</button>
+        <button type="button" role="tab" data-tab="agenda" aria-selected="false">Agenda</button>
+        <button type="button" role="tab" data-tab="act" aria-selected="false">Actuaciones</button>
+      </div>
+      <div id="k-docs" class="two">
+        <div class="card"><div id="k-docs-list"></div></div>
+        <div class="card"><div class="card-h"><h2>Subir documentos</h2></div><div class="card-b" id="k-uploader"></div></div>
+      </div>
+      <div id="k-agenda" hidden>
+        <div class="card">
+          <div class="card-h"><h2>Audiencias, vencimientos y citas</h2><button type="button" class="ghost" id="k-add-event">Agendar</button></div>
+          <div id="k-agenda-list"></div>
+        </div>
+      </div>
+      <div id="k-act" class="two" hidden>
+        <div class="card"><div class="card-h"><h2>Bitácora del proceso</h2></div><div id="k-act-list"></div></div>
+        <div class="card">
+          <div class="card-h"><h2>Registrar actuación</h2></div>
+          <form class="card-b" id="act-form" style="display:grid;gap:12px" novalidate>
+            <label class="f" for="a-fecha">Fecha<input type="date" id="a-fecha" required></label>
+            <label class="f" for="a-texto">Actuación<textarea id="a-texto" rows="4" placeholder="Ej.: Auto admite demanda y ordena notificar al demandado" required></textarea></label>
+            <button type="submit" class="primary">Guardar actuación</button>
+            <p class="msg" id="a-msg" role="status"></p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- CALENDARIO -->
+    <section class="view" id="v-calendario" hidden>
+      <div class="vhead">
+        <div><p class="eyebrow">Agenda</p><h1 id="cal-title">Calendario</h1></div>
+        <div class="row">
+          <button type="button" class="ghost" id="cal-prev" aria-label="Mes anterior">←</button>
+          <button type="button" class="ghost" id="cal-today">Hoy</button>
+          <a class="btn ghost" href="/api/agenda.ics" download>Exportar (.ics)</a>
+          <button type="button" class="ghost" id="cal-next" aria-label="Mes siguiente">→</button>
+          <button type="button" class="primary" data-act="new-event">Agendar</button>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="dot audiencia"></i>Audiencia</span>
+        <span><i class="dot vencimiento"></i>Vencimiento de término</span>
+        <span><i class="dot"></i>Cita, diligencia u otro</span>
+        <span style="color:var(--danger)">Número en rojo: día no hábil (festivo en Colombia)</span>
+      </div>
+      <div class="cal-wrap">
+        <div class="card"><div class="cal" id="cal"></div></div>
+        <div class="card">
+          <div class="card-h"><h2 id="cal-day-title">Hoy</h2><button type="button" class="ghost sm" id="cal-day-add">Agendar este día</button></div>
+          <div id="cal-day-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCUMENTOS -->
+    <section class="view" id="v-documentos" hidden>
+      <div class="vhead"><div><p class="eyebrow">Archivo</p><h1>Documentos</h1></div></div>
+      <div class="row">
+        <input type="search" id="d-q" placeholder="Buscar por archivo, nota, cliente o radicado" aria-label="Buscar documentos" style="flex:1 1 260px;width:auto">
+        <select id="d-cat" aria-label="Filtrar por tipo de documento" style="width:auto"></select>
+      </div>
+      <div class="two">
+        <div class="card"><div id="d-list"></div></div>
+        <div class="card"><div class="card-h"><h2>Subir documentos</h2></div><div class="card-b" id="d-uploader"></div></div>
+      </div>
+    </section>
+
+    <!-- TERMINOS -->
+    <section class="view" id="v-terminos" hidden>
+      <div class="vhead"><div><p class="eyebrow">Herramientas</p><h1>Calculadora de términos</h1><p class="sub">Cuenta días hábiles descontando fines de semana y festivos de Colombia.</p></div></div>
+      <div class="two">
+        <div class="card">
+          <form class="card-b" id="t-form" style="display:grid;gap:14px" novalidate>
+            <div class="fgrid">
+              <label class="f" for="t-inicio">Fecha de notificación o ejecutoria<input type="date" id="t-inicio" required></label>
+              <label class="f" for="t-n">Duración<input type="number" id="t-n" min="1" max="3650" value="10" required></label>
+              <label class="f full" for="t-unidad">Unidad
+                <select id="t-unidad">
+                  <option value="habiles">Días hábiles</option>
+                  <option value="calendario">Días calendario</option>
+                  <option value="meses">Meses</option>
+                </select>
+              </label>
+            </div>
+            <label class="check" for="t-judicial"><input type="checkbox" id="t-judicial" checked> <span>Calendario de la Rama Judicial<br><span class="hint">También descuenta la vacancia judicial (20 de diciembre al 10 de enero) y lunes a miércoles de Semana Santa.</span></span></label>
+            <p class="notice">El término empieza a contar el día siguiente a la fecha indicada. Si un plazo en días calendario o meses termina en día no hábil, se corre al siguiente día hábil.</p>
+            <div class="term-out" id="t-out" aria-live="polite"></div>
+            <div class="row"><button type="button" class="primary" id="t-agendar">Agendar este vencimiento</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Términos frecuentes</h2></div>
+          <div class="presets" id="t-presets"></div>
+          <p class="notice" style="padding:12px 18px;border-top:1px solid var(--line)">Referencia rápida. Verifica siempre la norma vigente y el tipo de proceso.</p>
+        </div>
+      </div>
+    </section>
+    <!-- ADMINISTRACION -->
+    <section class="view" id="v-admin" hidden>
+      <div class="vhead"><div><p class="eyebrow">Oficina</p><h1>Administración</h1></div></div>
+      <div class="tabs" role="tablist" id="adm-tabs">
+        <button type="button" role="tab" data-tab="usuarios" aria-selected="true">Usuarios</button>
+        <button type="button" role="tab" data-tab="papelera" aria-selected="false">Papelera</button>
+        <button type="button" role="tab" data-tab="auditoria" aria-selected="false">Auditoría</button>
+      </div>
+      <div id="adm-usuarios" class="two">
+        <div class="card"><div class="tablewrap" id="u-list"></div></div>
+        <div class="card">
+          <div class="card-h"><h2>Nuevo usuario</h2></div>
+          <form class="card-b" id="u-form" style="display:grid;gap:12px" novalidate>
+            <label class="f" for="u-nombre">Nombre<input type="text" id="u-nombre" autocomplete="off" required></label>
+            <label class="f" for="u-email">Correo<input type="email" id="u-email" autocomplete="off" required></label>
+            <label class="f" for="u-rol">Rol<select id="u-rol"><option value="abogado">Abogado</option><option value="asistente">Asistente</option><option value="admin">Administrador</option></select></label>
+            <label class="f" for="u-pass">Contraseña inicial <span class="hint">(mínimo 10 caracteres; pídele que la cambie al entrar)</span><input type="text" id="u-pass" autocomplete="off" required></label>
+            <button type="submit" class="primary">Crear usuario</button>
+            <p class="msg" id="u-msg" role="status"></p>
+          </form>
+          <p class="notice" style="padding:0 18px 16px">Los abogados y asistentes solo ven los expedientes que tienen asignados. Asígnalos desde la ficha de cada expediente.</p>
+        </div>
+      </div>
+      <div id="adm-papelera" hidden>
+        <div class="card">
+          <div class="card-h"><h2>Documentos en la papelera</h2><span class="small muted">Se eliminan solos a los 30 días.</span></div>
+          <div id="p-list"></div>
+        </div>
+      </div>
+      <div id="adm-auditoria" hidden>
+        <div class="card">
+          <div class="card-h"><h2>Registro de auditoría</h2><span class="small muted">Últimos 300 movimientos. No se puede editar ni borrar.</span></div>
+          <div class="tablewrap" id="au-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Case dialog -->
+<dialog id="dlg-case">
+  <form id="case-form" method="dialog" novalidate>
+    <div class="dh"><h2 id="case-dlg-title">Nuevo expediente</h2><button type="button" class="ghost sm" data-close>Cerrar</button></div>
+    <div class="fgrid">
+      <label class="f full" for="k-radicado">Radicado o número de proceso
+        <input class="mono" type="text" id="k-radicado" autocomplete="off" placeholder="11001-31-03-001-2024-00123-00" required>
+        <span class="hint">23 dígitos en la Rama Judicial. Puedes usar un número interno si aún no hay radicado.</span>
+      </label>
+      <label class="f" for="k-cliente">Cliente<input type="text" id="k-cliente" autocomplete="off" required></label>
+      <label class="f" for="k-contraparte">Contraparte<input type="text" id="k-contraparte" autocomplete="off"></label>
+      <label class="f full" for="k-despacho">Despacho o autoridad<input type="text" id="k-despacho" autocomplete="off" placeholder="Juzgado 1 Civil del Circuito de Bogotá"></label>
+      <label class="f" for="k-area">Área<select id="k-area"></select></label>
+      <label class="f" for="k-clase">Clase de proceso<input type="text" id="k-clase" autocomplete="off" placeholder="Verbal, ejecutivo, tutela…"></label>
+      <label class="f" for="k-rol">Representamos a<select id="k-rol"><option value="demandante">Demandante / accionante</option><option value="demandado">Demandado / accionado</option><option value="tercero">Tercero / interviniente</option><option value="asesoria">Asesoría (sin proceso)</option></select></label>
+      <label class="f" for="k-estado">Estado<select id="k-estado"><option value="activo">Activo</option><option value="suspendido">Suspendido</option><option value="terminado">Terminado</option><option value="archivado">Archivado</option></select></label>
+      <label class="f" for="k-responsable">Abogado responsable<input type="text" id="k-responsable" autocomplete="off"></label>
+      <label class="f" for="k-inicio">Fecha de inicio<input type="date" id="k-inicio"></label>
+      <label class="f full" for="k-notas">Notas<textarea id="k-notas" rows="3" placeholder="Pretensiones, cuantía, estrategia…"></textarea></label>
+    </div>
+    <fieldset class="assign admin-only" id="k-asignados-box">
+      <legend>Usuarios con acceso <span class="hint">(abogados y asistentes solo ven sus expedientes asignados)</span></legend>
+      <div id="k-asignados" class="assign-list"></div>
+    </fieldset>
+    <p class="msg" id="case-msg" role="status"></p>
+    <div class="df">
+      <span id="case-del-zone"></span>
+      <button type="submit" class="primary">Guardar expediente</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Event dialog -->
+<dialog id="dlg-event">
+  <form id="event-form" method="dialog" novalidate>
+    <div class="dh"><h2 id="event-dlg-title">Agendar</h2><button type="button" class="ghost sm" data-close>Cerrar</button></div>
+    <div class="fgrid">
+      <label class="f full" for="e-titulo">Título<input type="text" id="e-titulo" autocomplete="off" placeholder="Audiencia inicial (art. 372 CGP)" required></label>
+      <label class="f" for="e-tipo">Tipo<select id="e-tipo"><option value="audiencia">Audiencia</option><option value="vencimiento">Vencimiento de término</option><option value="diligencia">Diligencia</option><option value="cita">Cita con cliente</option><option value="otro">Otro</option></select></label>
+      <label class="f" for="e-caso">Expediente<select id="e-caso"></select></label>
+      <label class="f" for="e-fecha">Fecha<input type="date" id="e-fecha" required></label>
+      <label class="f" for="e-hora">Hora <span class="hint">(opcional)</span><input type="time" id="e-hora"></label>
+      <label class="f full" for="e-lugar">Lugar o enlace<input type="text" id="e-lugar" autocomplete="off" placeholder="Sala virtual Lifesize, sede judicial…"></label>
+      <label class="f full" for="e-nota">Nota<textarea id="e-nota" rows="2"></textarea></label>
+    </div>
+    <p class="msg" id="event-msg" role="status"></p>
+    <div class="df">
+      <span id="event-del-zone"></span>
+      <button type="submit" class="primary">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+
+<!-- User edit dialog -->
+<dialog id="dlg-user">
+  <form id="user-form" method="dialog" novalidate>
+    <div class="dh"><h2 id="user-dlg-title">Editar usuario</h2><button type="button" class="ghost sm" data-close>Cerrar</button></div>
+    <div class="fgrid">
+      <label class="f full" for="ue-nombre">Nombre<input type="text" id="ue-nombre" autocomplete="off" required></label>
+      <label class="f" for="ue-rol">Rol<select id="ue-rol"><option value="abogado">Abogado</option><option value="asistente">Asistente</option><option value="admin">Administrador</option></select></label>
+      <label class="f" for="ue-activo">Estado<select id="ue-activo"><option value="1">Activo</option><option value="0">Desactivado</option></select></label>
+      <label class="f full" for="ue-pass">Nueva contraseña <span class="hint">(déjala vacía para no cambiarla)</span><input type="text" id="ue-pass" autocomplete="off"></label>
+      <label class="check full" for="ue-desbloquear" id="ue-desbloquear-box"><input type="checkbox" id="ue-desbloquear"> <span>Desbloquear la cuenta (está bloqueada por intentos fallidos)</span></label>
+    </div>
+    <p class="msg" id="user-msg" role="status"></p>
+    <div class="df"><span></span><button type="submit" class="primary">Guardar</button></div>
+  </form>
+</dialog>
+
+<!-- Password dialog -->
+<dialog id="dlg-pass">
+  <form id="pass-form" method="dialog" novalidate>
+    <div class="dh"><h2>Cambiar contraseña</h2><button type="button" class="ghost sm" data-close>Cerrar</button></div>
+    <label class="f" for="pw-actual">Contraseña actual<input type="password" id="pw-actual" autocomplete="current-password" required></label>
+    <label class="f" for="pw-nueva">Nueva contraseña <span class="hint">(mínimo 10 caracteres)</span><input type="password" id="pw-nueva" autocomplete="new-password" required></label>
+    <p class="msg" id="pass-msg" role="status"></p>
+    <div class="df"><span></span><button type="submit" class="primary">Cambiar</button></div>
+  </form>
+</dialog>
+
+<!-- Versions dialog -->
+<dialog id="dlg-versions">
+  <form method="dialog">
+    <div class="dh"><h2 id="ver-title">Versiones</h2><button type="button" class="ghost sm" data-close>Cerrar</button></div>
+    <div id="ver-list"></div>
+    <p class="notice">Para subir una versión nueva, sube un archivo con el mismo nombre en este expediente. La huella SHA-256 sirve para demostrar que un archivo no cambió.</p>
+  </form>
+</dialog>
+<script src="/terminos.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

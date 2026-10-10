@@ -1,0 +1,27 @@
+# Instalación en un servidor propio: app + HTTPS automático con Caddy.
+# 1. Apunta tu dominio al servidor y escríbelo en el archivo .env (DOMINIO=expedientes.tuoficina.co).
+# 2. docker compose up -d
+# 3. docker compose exec app npm run crear-admin -- tu@correo.co "Tu Nombre"
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - datos:/data
+      - ./respaldos:/respaldos
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMINIO=${DOMINIO:?Escribe DOMINIO en el archivo .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - app
+volumes:
+  datos:
+  caddy_data:
