@@ -6,7 +6,8 @@ const port = Number(process.env.PORT) || 3000;
 const app = createApp({
   dataDir: process.env.DATA_DIR || path.join(__dirname, "..", "data"),
   secureCookies: process.env.NODE_ENV === "production",
-  trustProxy: process.env.TRUST_PROXY || false
+  // "1" means one proxy in front (Caddy); Express needs it as a number to trust X-Forwarded-For.
+  trustProxy: /^\d+$/.test(process.env.TRUST_PROXY || "") ? Number(process.env.TRUST_PROXY) : process.env.TRUST_PROXY || false
 });
 
 // Empty the 30-day document trash at start-up and every 6 hours.
