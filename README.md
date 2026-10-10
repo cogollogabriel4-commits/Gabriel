@@ -6,8 +6,8 @@ Sigue el documento de diseño *Plan: sistema de gestión de expedientes* (fase 1
 
 ## Qué incluye
 
-- **Expedientes**: radicado, partes, despacho, área, clase de proceso, estado, responsable y notas; búsqueda y filtros.
-- **Documentos**: subida por arrastre (PDF, Word, Excel, imágenes, correos, texto; hasta 50 MB; se verifica que el contenido corresponda a la extensión), categoría, nota, **versiones** (un archivo con el mismo nombre en el mismo expediente queda como versión nueva) y **huella SHA-256** de cada archivo.
+- **Expedientes**: Radicado, partes, despacho, área, clase de proceso, estado, responsable y notas; búsqueda y filtros.
+- **Documentos**: Subida por arrastre (PDF, Word, Excel, imágenes, correos, texto; hasta 50 MB; se verifica que el contenido corresponda a la extensión), categoría, nota, **versiones** (un archivo con el mismo nombre en el mismo expediente queda como versión nueva) y **huella SHA-256** de cada archivo.
 - **Actuaciones**: bitácora fechada con autor.
 - **Agenda y calendario** con festivos de Colombia, marcar como cumplido y exportar a Google Calendar u Outlook (`.ics`).
 - **Calculadora de términos** en días hábiles, calendario o meses, con vacancia judicial y Semana Santa opcionales.
